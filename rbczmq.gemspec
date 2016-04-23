@@ -21,17 +21,4 @@ Gem::Specification.new do |s|
   s.require_paths = ["lib"]
   s.add_development_dependency('minitest', '~> 5.5.0')
   s.add_development_dependency('rake-compiler', '~> 0.8.0')
-
-  # get an array of submodule dirs by executing 'pwd' inside each submodule
-  gem_dir = File.expand_path(File.dirname(__FILE__)) + "/"
-  `git submodule --quiet foreach pwd`.split($\).each do |submodule_path|
-    Dir.chdir(submodule_path) do
-      submodule_relative_path = submodule_path.sub gem_dir, ""
-      # issue git ls-files in submodule's directory and
-      # prepend the submodule path to create absolute file paths
-      `git ls-files`.split($\).each do |filename|
-        s.files << "#{submodule_relative_path}/#{filename}"
-      end
-    end
-  end
 end
