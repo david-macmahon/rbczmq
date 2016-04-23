@@ -1769,7 +1769,9 @@ static VALUE rb_czmq_nogvl_monitor_recv(void *ptr)
 
 static VALUE rb_czmq_socket_monitor_thread(void *arg)
 {
-    zmq_event_t event;
+    uint16_t *data;
+    uint16_t event;
+    int32_t value;
     struct nogvl_monitor_recv_args args;
     int rc;
     zmq_sock_wrapper *sock = (zmq_sock_wrapper *)arg;
@@ -1793,13 +1795,17 @@ static VALUE rb_czmq_socket_monitor_thread(void *arg)
         if (rc == -1 && (sock->flags & ZMQ_SOCKET_DESTROYED)) break;
         assert (rc != -1);
         memcpy (&event, zmq_msg_data (&args.msg_event), sizeof (event));
+        data = zmq_msg_data (&args.msg_event);
+        assert (data);
+        event = *data++;
+        value = *(uint32_t *)data;
         // zmq_msg_data(&msg2), zmq_msg_size(&msg2)
 
         // copy endpoint into ruby string.
         VALUE endpoint_str = rb_str_new(zmq_msg_data(&args.msg_endpoint), zmq_msg_size(&args.msg_endpoint));
         VALUE method = Qnil;
 
-        switch (event.event) {
+        switch (event) {
         case ZMQ_EVENT_CONNECTED: method = intern_on_connected; break;
         case ZMQ_EVENT_CONNECT_DELAYED: method = intern_on_connect_delayed; break;
         case ZMQ_EVENT_CONNECT_RETRIED: method = intern_on_connect_retried; break;
@@ -1813,7 +1819,7 @@ static VALUE rb_czmq_socket_monitor_thread(void *arg)
         }
 
         if (method != Qnil) {
-            rb_funcall(sock->monitor_handler, method, 2, endpoint_str, INT2FIX(event.value));
+            rb_funcall(sock->monitor_handler, method, 2, endpoint_str, INT2FIX(value));
         }
 
         /* once the socket is marked as destroyed, it appears to be not safe to call receive on it. */
