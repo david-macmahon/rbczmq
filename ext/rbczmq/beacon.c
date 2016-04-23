@@ -37,7 +37,11 @@ static void rb_czmq_free_beacon_gc(void *ptr)
 static VALUE rb_czmq_nogvl_new_beacon(void *ptr)
 {
     int port = (int)ptr;
+#if CZMQ_VERSION < 020100
     return (VALUE)zbeacon_new(port);
+#else
+    return (VALUE)zbeacon_new(NULL, port);
+#endif
 }
 
 /*
