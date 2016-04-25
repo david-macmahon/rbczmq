@@ -96,6 +96,10 @@ find_header('czmq.h') or exit 1
 find_library('zmq', 'zmq_version')   or exit 1
 find_library('czmq', 'zsys_version') or exit 1
 
+# Check for functions to support if they exist
+have_func('zsocket_set_router_mandatory', 'czmq.h')
+
+# Check for macros to support if they exist
 $defs << '-DHAVE_ZMQ_STREAM' if have_macro('ZMQ_STREAM', 'zmq.h')
 
 $defs << "-pedantic"

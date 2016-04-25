@@ -1233,6 +1233,7 @@ static VALUE rb_czmq_socket_set_opt_delay_attach_on_connect(VALUE obj, VALUE val
     ZmqSetBooleanSockOpt(obj, zsocket_set_delay_attach_on_connect, "DELAY_ATTACH_ON_CONNECT", value);
 }
 
+#ifdef HAVE_ZSOCKET_SET_ROUTER_MANDATORY
 /*
  *  call-seq:
  *     sock.router_mandatory = true =>  nil
@@ -1251,6 +1252,7 @@ static VALUE rb_czmq_socket_set_opt_router_mandatory(VALUE obj, VALUE value)
     zmq_sock_wrapper *sock = NULL;
     ZmqSetBooleanSockOpt(obj, zsocket_set_router_mandatory, "ROUTER_MANDATORY", value);
 }
+#endif
 
 /*
  *  call-seq:
@@ -1956,7 +1958,9 @@ void _init_rb_czmq_socket()
     rb_define_method(rb_cZmqSocket, "ipv4only?", rb_czmq_socket_opt_ipv4only, 0);
     rb_define_method(rb_cZmqSocket, "ipv4only=", rb_czmq_socket_set_opt_ipv4only, 1);
     rb_define_method(rb_cZmqSocket, "delay_attach_on_connect=", rb_czmq_socket_set_opt_delay_attach_on_connect, 1);
+#ifdef HAVE_ZSOCKET_SET_ROUTER_MANDATORY
     rb_define_method(rb_cZmqSocket, "router_mandatory=", rb_czmq_socket_set_opt_router_mandatory, 1);
+#endif
     rb_define_method(rb_cZmqSocket, "router_raw=", rb_czmq_socket_set_opt_router_raw, 1);
     rb_define_method(rb_cZmqSocket, "xpub_verbose=", rb_czmq_socket_set_opt_xpub_verbose, 1);
     rb_define_method(rb_cZmqSocket, "sndbuf", rb_czmq_socket_opt_sndbuf, 0);
