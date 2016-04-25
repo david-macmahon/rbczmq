@@ -1,5 +1,9 @@
 # encoding: utf-8
 
+# Ensure the shared library is loaded so ZMQ (and possibly ZMQ::STREAM) will be
+# defined.
+require 'rbczmq_ext.so'
+
 # Raise exception if ZMQ::STREAM is not defined
 unless defined? ZMQ::STREAM
   raise LoadError.new('ZMQ::Socket::Stream is not available')
