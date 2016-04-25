@@ -213,4 +213,5 @@ require "zmq/socket/req"
 require "zmq/socket/rep"
 require "zmq/socket/router"
 require "zmq/socket/dealer"
-require "zmq/socket/stream"
+# Only require zma/socket/stream if ZMQ::STREAM is defined (by C extension)
+require "zmq/socket/stream" if defined? ZMQ::STREAM

@@ -1,5 +1,10 @@
 # encoding: utf-8
 
+# Raise exception if ZMQ::STREAM is not defined
+unless defined? ZMQ::STREAM
+  raise LoadError.new('ZMQ::Socket::Stream is not available')
+end
+
 class ZMQ::Socket::Stream
 
 # == ZMQ::Socket::Stream
@@ -26,6 +31,8 @@ class ZMQ::Socket::Stream
 #
 # Also, please note that omitting the ZMQ_MSGMORE flag will prevent sending further data (from
 # any client) on the same socket.
+#
+# This class is not supported unless the ZeroMQ library supports ZMQ_STREAM sockets.
 #
 # === Summary of ZMQ_STREAM characteristics
 #
