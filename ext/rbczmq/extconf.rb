@@ -93,8 +93,8 @@ pkg_config('libczmq')
 find_header('zmq.h')
 find_header('czmq.h')
 
-find_library('zmq', 'zmq_init')
-find_library('czmq', 'zsys_init')
+find_library('zmq', 'zmq_version')
+find_library('czmq', 'zsys_version')
 
 $defs << "-pedantic"
 
