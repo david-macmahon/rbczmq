@@ -96,6 +96,8 @@ find_header('czmq.h') or exit 1
 find_library('zmq', 'zmq_version')   or exit 1
 find_library('czmq', 'zsys_version') or exit 1
 
+$defs << '-DHAVE_ZMQ_STREAM' if have_macro('ZMQ_STREAM', 'zmq.h')
+
 $defs << "-pedantic"
 
 $CFLAGS  << ' -Wall -funroll-loops'
