@@ -90,11 +90,11 @@ have_func('rb_thread_call_without_gvl')
 pkg_config('libzmq')
 pkg_config('libczmq')
 
-find_header('zmq.h')
-find_header('czmq.h')
+find_header('zmq.h')  or exit 1
+find_header('czmq.h') or exit 1
 
-find_library('zmq', 'zmq_version')
-find_library('czmq', 'zsys_version')
+find_library('zmq', 'zmq_version')   or exit 1
+find_library('czmq', 'zsys_version') or exit 1
 
 $defs << "-pedantic"
 
