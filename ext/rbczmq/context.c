@@ -324,8 +324,10 @@ static inline VALUE rb_czmq_ctx_socket_klass(int socket_type)
                        break;
         case ZMQ_XSUB: return rb_cZmqXSubSocket;
                        break;
+#ifdef HAVE_ZMQ_STREAM
         case ZMQ_STREAM: return rb_cZmqStreamSocket;
                          break;
+#endif
         default: rb_raise(rb_eZmqError, "ZMQ socket type %d not supported!", socket_type);
                  break;
     }
