@@ -21,19 +21,6 @@ DLEXT = RbConfig::CONFIG['DLEXT'] || 'bundle'
 
 with_config('zeromq')
 with_config('czmq')
-with_config('libsodium')
-
-def pkg_config_include_dirs(pkg)
-  pkg_config(pkg, 'cflags-only-I').split.map do |d|
-    d.sub(/^-I/, '')
-  end
-end
-
-def pkg_config_lib_dirs(pkg)
-  pkg_config(pkg, 'libs-only-L').split.map do |d|
-    d.sub(/^-L/, '')
-  end
-end
 
 ## Fail early if we don't meet the following dependencies.
 #
@@ -100,13 +87,14 @@ have_header('ruby/thread.h')
 have_func('rb_thread_blocking_region')
 have_func('rb_thread_call_without_gvl')
 
-find_header('sodium.h', *pkg_config_include_dirs('libsodium'))
-find_header('zmq.h',    *pkg_config_include_dirs('libzmq'))
-find_header('czmq.h',   *pkg_config_include_dirs('libczmq'))
+pkg_config('libzmq')
+pkg_config('libczmq')
 
-find_library('sodium', 'sodium_init', *pkg_config_lib_dirs('libsodium'))
-find_library('zmq',    'zmq_init',    *pkg_config_lib_dirs('libzmq'))
-find_library('czmq',   'zsys_init',   *pkg_config_lib_dirs('libczmq'))
+find_header('zmq.h')
+find_header('czmq.h')
+
+find_library('zmq', 'zmq_init')
+find_library('czmq', 'zsys_init')
 
 $defs << "-pedantic"
 
