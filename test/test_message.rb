@@ -172,13 +172,22 @@ class TestZmqMessage < ZmqTestCase
     msg.pushstr "body"
     msg.pushstr "header"
 
-    expected = "\006header\004body"
-    assert_equal expected, msg.encode
+    expected = ZMQ::Frame.new("\006header\004body")
+    encoded = msg.encode
 
-    decoded = ZMQ::Message.decode(expected)
+    assert_equal expected, encoded
+
+    # Test decode from Frame
+    decoded = ZMQ::Message.decode(encoded)
     assert_equal "header", decoded.popstr
     assert_equal "body", decoded.popstr
 
+    # Test decode from String
+    decoded = ZMQ::Message.decode("\006header\004body")
+    assert_equal "header", decoded.popstr
+    assert_equal "body", decoded.popstr
+
+    # Test decoding invalid String
     assert_nil ZMQ::Message.decode("tainted")
   end
 

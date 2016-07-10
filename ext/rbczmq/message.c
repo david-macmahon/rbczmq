@@ -584,35 +584,44 @@ static VALUE rb_czmq_message_destroy(VALUE obj)
 
 /*
  *  call-seq:
- *     msg.encode    =>  string
+ *     msg.encode    =>  Frame
  *
- *  Encodes the message to a new buffer.
+ *  Encodes the message to a Frame.
  *
  * === Examples
  *     msg = ZMQ::Message.new    =>  ZMQ::Message
  *     msg.pushstr "body"
  *     msg.pushstr "header"
- *     msg.encode     =>   "\006header\004body"
+ *     frame = msg.encode        =>  ZMQ::Frame
+ *     frame.data                =>  "\006header\004body"
  *
 */
 
 static VALUE rb_czmq_message_encode(VALUE obj)
 {
+    zframe_t *frame = NULL;
+    ZmqGetMessage(obj);
+    ZmqReturnNilUnlessOwned(message); /* Is this really necessary? */
+
+#ifdef HAVE_ZMSG_ENCODE_TO_FRAME
+    frame = zmsg_encode(message->message);
+#else
     byte *buff;
     size_t buff_size;
-    ZmqGetMessage(obj);
-    ZmqReturnNilUnlessOwned(message);
     buff_size = zmsg_encode(message->message, &buff);
-    VALUE result = rb_str_new((char *)buff, buff_size);
+    frame = zframe_new(buff, buff_size);
     free(buff);
-    return result;
+#endif
+
+    return rb_czmq_alloc_frame(frame);
 }
 
 /*
  *  call-seq:
  *     ZMQ::Message.decode("\006header\004body")    =>  ZMQ::Message
  *
- *  Decode a buffer into a new message. Returns nil if the buffer is not properly formatted.
+ *  Decode a buffer (i.e. String) or a Frame into a new message. Returns nil if
+ *  the buffer is not properly formatted.
  *
  * === Examples
  *     msg = ZMQ::Message.decode("\006header\004body")
@@ -621,11 +630,36 @@ static VALUE rb_czmq_message_encode(VALUE obj)
  *
 */
 
-static VALUE rb_czmq_message_s_decode(ZMQ_UNUSED VALUE obj, VALUE buffer)
+static VALUE rb_czmq_message_s_decode(ZMQ_UNUSED VALUE obj, VALUE arg)
 {
     zmsg_t * m = NULL;
-    Check_Type(buffer, T_STRING);
-    m = zmsg_decode((byte *)RSTRING_PTR(buffer), RSTRING_LEN(buffer));
+
+    /* Ensure arg is String or Frame */
+    if(TYPE(arg) != T_STRING && !rb_obj_is_kind_of(arg, rb_cZmqFrame)) {
+        rb_raise(rb_eTypeError,
+            "wrong argument type %s (expected String or ZMQ::Frame): %s",
+            rb_obj_classname(arg), RSTRING_PTR(rb_obj_as_string(arg)));
+    }
+
+#ifdef HAVE_ZMSG_DECODE_FROM_FRAME
+    if(TYPE(arg) == T_STRING) {
+        /* Create zframe from String, decode it, destroy zframe */
+        zframe_t *zframe = zframe_new(RSTRING_PTR(arg), (size_t)RSTRING_LEN(arg));
+        m = zmsg_decode(zframe);
+        zframe_destroy(&zframe);
+    } else {
+        ZmqGetFrame(arg);
+        m = zmsg_decode(frame->frame);
+    }
+#else
+    if(TYPE(args) == T_STRING) {
+        m = zmsg_decode((byte *)RSTRING_PTR(arg), RSTRING_LEN(arg));
+    } else {
+        ZmqGetFrame(arg);
+        m = zmsg_decode(zframe_data(frame->frame), zframe_size(frame->frame));
+    }
+#endif
+
     if (m == NULL) return Qnil;
     return rb_czmq_alloc_message(m);
 }
@@ -645,11 +679,8 @@ static VALUE rb_czmq_message_s_decode(ZMQ_UNUSED VALUE obj, VALUE buffer)
 
 static VALUE rb_czmq_message_eql_p(VALUE obj, VALUE other_message)
 {
+    VALUE rc = Qtrue;
     zmq_message_wrapper *other = NULL;
-    byte *buff = NULL;
-    size_t buff_size;
-    byte *other_buff = NULL;
-    size_t other_buff_size;
     ZmqGetMessage(obj);
     ZmqAssertMessage(other_message);
     ZmqAssertMessageOwned(message);
@@ -660,11 +691,24 @@ static VALUE rb_czmq_message_eql_p(VALUE obj, VALUE other_message)
     if (zmsg_size(message->message) != zmsg_size(other->message)) return Qfalse;
     if (zmsg_content_size(message->message) != zmsg_content_size(other->message)) return Qfalse;
 
+#ifdef HAVE_ZMSG_ENCODE_TO_FRAME
+    zframe_t * zframe = zmsg_encode(message->message);
+    zframe_t * other_zframe = zmsg_encode(other->message);
+    if(!zframe_eq(zframe, other_zframe)) rc = Qfalse;
+    zframe_destroy(&zframe);
+    zframe_destroy(&other_zframe);
+#else
+    byte *buff = NULL;
+    byte *other_buff = NULL;
+    size_t buff_size;
+    size_t other_buff_size;
     buff_size = zmsg_encode(message->message, &buff);
     other_buff_size = zmsg_encode(other->message, &other_buff);
     if (buff_size != other_buff_size) return Qfalse;
     if (strncmp((const char*)buff, (const char*)other_buff, buff_size) != 0) return Qfalse;
-    return Qtrue;
+#endif
+
+    return rc;
 }
 
 /*

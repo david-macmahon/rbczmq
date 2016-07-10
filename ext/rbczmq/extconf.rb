@@ -99,6 +99,14 @@ find_library('czmq', 'zsys_version') or exit 1
 # Check for functions to support if they exist
 have_func('zsocket_set_router_mandatory', 'czmq.h')
 
+if have_func('zmsg_encode((zmsg_t *)0)', 'czmq.h')
+  $defs << '-DHAVE_ZMSG_ENCODE_TO_FRAME'
+end
+
+if have_func('zmsg_decode((zframe_t *)0)', 'czmq.h')
+  $defs << '-DHAVE_ZMSG_DECODE_FROM_FRAME'
+end
+
 # Check for macros to support if they exist
 $defs << '-DHAVE_ZMQ_STREAM' if have_macro('ZMQ_STREAM', 'zmq.h')
 
