@@ -6,9 +6,11 @@
 *.lai
 *.dylib.dSYM
 *.dylib
+*.so
 *.o
 *.a
 *.log
+tags
 tmp/*
 true/*
 *.bundle
