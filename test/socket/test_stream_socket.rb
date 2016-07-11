@@ -20,9 +20,11 @@ class TestStreamSocket < ZmqTestCase
     port = sock.bind("tcp://127.0.0.1:*")
 
     tcp = TCPSocket.new('127.0.0.1', port)
+    tcp.write("") # Work around bug in some libzmq versions
     tcp.write("hello")
 
     Timeout.timeout(5) do
+      msg = sock.recv_message # Work around bug in some libzmq versions
       msg = sock.recv_message
 
       # Messages received from a STREAM socket are in two parts:
