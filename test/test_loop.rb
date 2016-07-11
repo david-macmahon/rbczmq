@@ -86,7 +86,7 @@ class TestZmqLoop < ZmqTestCase
     ctx = ZMQ::Context.new
     fired = 0
     ZMQ::Loop.run do
-      timer = ZL.add_timer(0.1, 5) do
+      timer = ZL.add_timer(0.2, 5) do
         fired += 1
         fired < 5
       end
@@ -137,7 +137,7 @@ class TestZmqLoop < ZmqTestCase
 
   class LoopBreaker < ZMQ::Handler
     def on_readable
-      p :on_readable
+      #p :on_readable
       false
     end
 
@@ -188,7 +188,7 @@ class TestZmqLoop < ZmqTestCase
 
   class FailHandler < ZMQ::Handler
     def on_readable
-      p :on_readable
+      #p :on_readable
       raise "fail"
     end
 
