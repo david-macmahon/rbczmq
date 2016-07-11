@@ -23,7 +23,8 @@ extern rb_encoding *binary_encoding;
 
 
 #define ZmqRaiseSysError() { \
-        printf("Sys error location: %s:%d\n", __FILE__,__LINE__); \
+        rb_warning("sys error %d (%s) location: %s:%d\n", \
+            zmq_errno(), zmq_strerror(zmq_errno()), __FILE__,__LINE__); \
         rb_sys_fail(zmq_strerror(zmq_errno())); \
     }
 #define ZmqAssertSysError() if (zmq_errno() != 0 && zmq_errno() != EAGAIN) ZmqRaiseSysError();
